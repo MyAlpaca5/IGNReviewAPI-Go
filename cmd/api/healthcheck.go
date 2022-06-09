@@ -1,9 +1,11 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
-	app.logger.Println("status: available")
-	app.logger.Printf("environment: %s\n", app.config.env)
-	app.logger.Printf("version: %s\n", version)
+	"github.com/gin-gonic/gin"
+)
+
+func (app *application) healthcheckHandler(c *gin.Context) {
+	c.String(http.StatusOK, "status: available\nenvironment: %s\nversion: %s\nfull path:%s", app.config.env, version, c.FullPath())
 }

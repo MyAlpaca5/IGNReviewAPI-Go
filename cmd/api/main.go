@@ -2,18 +2,17 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 const version = "1.0.0"
 
 // Config stores all configuration related data.
 type config struct {
-	port int
+	port string
 	env  string
 }
 
@@ -27,7 +26,7 @@ func main() {
 	var cfg config
 
 	// Read value from command line parameters and set them into config struct
-	flag.IntVar(&cfg.port, "port", 4000, "API server port number")
+	flag.StringVar(&cfg.port, "port", "50001", "API server port number")
 	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev|staging|prod)")
 	flag.Parse()
 
@@ -40,23 +39,23 @@ func main() {
 		logger: logger,
 	}
 
-	// Initialize servemux
-	mux := http.NewServeMux()
+	// Creates a router without any middleware by default
+	r := gin.New()
 
-	// Bind handlers
-	mux.HandleFunc("/v1/healthcheck", app.healthcheckHandler)
+	// Global middleware
+	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
+	// By default gin.DefaultWriter = os.Stdout
+	r.Use(gin.Logger())
 
-	// Initialize HTTP server
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      mux,
-		IdleTimeout:  2 * time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+	// Recovery middleware recovers from any panics and writes a 500 if there was one.
+	r.Use(gin.Recovery())
+
+	// define routes and handlers
+	v1 := r.Group("/v1")
+	{
+		v1.GET("/healthcheck", app.healthcheckHandler)
 	}
 
-	// Start HTTP server
-	logger.Printf("API %s server is listening on %s", cfg.env, srv.Addr)
-	err := srv.ListenAndServe()
-	logger.Fatal(err)
+	// run server
+	r.Run(":" + app.config.port)
 }
