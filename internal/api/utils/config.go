@@ -1,4 +1,4 @@
-package config
+package utils
 
 import (
 	flag "github.com/spf13/pflag"
@@ -7,7 +7,7 @@ import (
 
 const Version = "1.0.0"
 
-func Setup() {
+func InitConfig() {
 	// Read value from command line parameters and set them into config struct
 	flag.String("port", "50001", "API server port number")
 	flag.String("env", "dev", "Environment (dev|staging|prod)")
