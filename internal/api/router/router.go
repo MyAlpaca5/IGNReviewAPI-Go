@@ -12,7 +12,7 @@ func NewRouter() *gin.Engine {
 	// Bind Middlewares
 
 	// Bind routes and handlers
-	router.GET("/api/healthcheck", controllers.GetHealthCheck)
+	router.GET("/api/healthcheck", controllers.HealthcheckGETHandler)
 
 	return router
 }
