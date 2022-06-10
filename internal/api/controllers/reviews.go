@@ -52,7 +52,7 @@ func ShowReviewHandler(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	fmt.Println(id)
 	if err != nil || id < 1 {
-		r_errors.RespondError(c, r_errors.ResponseError{StatusCode: http.StatusBadRequest, Message: fmt.Sprintf("invalid id parameter: %s", c.Param("id"))})
+		r_errors.RespondError(c, r_errors.ResponseError{StatusCode: http.StatusBadRequest, Message: fmt.Sprintf("Path Error - invalid id parameter: %s", c.Param("id"))})
 		return
 	}
 
