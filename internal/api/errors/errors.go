@@ -23,10 +23,6 @@ func (re ResponseError) Unwarp() error {
 	return re.Err
 }
 
-func RespondError(c *gin.Context, re ResponseError) {
-	c.JSON(re.StatusCode, re)
-}
-
 // JSON related errors
 func JSONSyntaxError(err *json.SyntaxError) string {
 	return fmt.Sprintf("JSON Error - badly-formed JSON (at character %d)", err.Offset)

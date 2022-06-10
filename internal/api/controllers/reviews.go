@@ -40,7 +40,7 @@ func CreateReviewHandler(c *gin.Context) {
 			response.Message = "Unknown Error - " + err.Error()
 		}
 
-		r_errors.RespondError(c, response)
+		c.JSON(response.StatusCode, response)
 		return
 	}
 
@@ -52,7 +52,7 @@ func ShowReviewHandler(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	fmt.Println(id)
 	if err != nil || id < 1 {
-		r_errors.RespondError(c, r_errors.ResponseError{StatusCode: http.StatusBadRequest, Message: fmt.Sprintf("Path Error - invalid id parameter: %s", c.Param("id"))})
+		c.JSON(http.StatusBadRequest, r_errors.ResponseError{StatusCode: http.StatusBadRequest, Message: fmt.Sprintf("Path Error - invalid id parameter: %s", c.Param("id"))})
 		return
 	}
 
