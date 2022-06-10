@@ -1,16 +1,18 @@
 package schemas
 
-import "time"
+import (
+	"time"
+)
 
 type Review struct {
-	Name             string    `json:"name"`
+	Name             string    `json:"name" binding:"required"`
 	ShortName        string    `json:"short_name"`
 	LongDescription  string    `json:"long_description"`
 	ShortDescription string    `json:"short_description"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	ReviewURL        string    `json:"review_url"`
-	ReviewScore      float32   `json:"review_score"`
+	CreatedAt        time.Time `json:"created_at" binding:"required"`
+	UpdatedAt        time.Time `json:"updated_at" binding:"required,gtfield=CreatedAt"`
+	ReviewURL        string    `json:"review_url" binding:"required"`
+	ReviewScore      float32   `json:"review_score" binding:"required,min=0,max=10"`
 	Slug             string    `json:"slug"`
 	MediaType        string    `json:"media_type"`
 	GenreList        []string  `json:"genre_list,omitempty"`

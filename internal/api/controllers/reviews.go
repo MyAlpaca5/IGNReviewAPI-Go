@@ -1,20 +1,50 @@
 package controllers
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/schemas"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
-// ReviewsGETHandler handles "POST /api/reviews" endpoint. TODO: for now, just return plain text.
+// ReviewsGETHandler handles "POST /api/reviews" endpoint.
 func CreateReviewHandler(c *gin.Context) {
-	// TEST
-	c.String(http.StatusOK, "POST %s", c.FullPath())
-	// TEST END
+	var review schemas.Review
+	if err := c.ShouldBindJSON(&review); err != nil {
+		var ginErr gin.Error
+		var validationErr validator.ValidationErrors
+		var syntaxError *json.SyntaxError
+		var unmarshalTypeError *json.UnmarshalTypeError
+
+		response := r_errors.ResponseError{
+			StatusCode: http.StatusInternalServerError,
+		}
+
+		switch {
+		case errors.As(err, &syntaxError):
+			response.Message = r_errors.JSONSyntaxError(syntaxError)
+		case errors.As(err, &unmarshalTypeError):
+			response.Message = r_errors.JSONUnmarshalTypeError(unmarshalTypeError)
+		case errors.As(err, &ginErr):
+			response.Message = r_errors.GINError(ginErr)
+		case errors.As(err, &validationErr):
+			response.Message = r_errors.ValidationError(validationErr)
+		default:
+			response.Message = err.Error()
+		}
+
+		r_errors.RespondError(c, response)
+		return
+	}
+
+	c.JSON(http.StatusOK, review)
 }
 
 // ReviewsGETHandler handles "GET /api/reviews/:id" endpoint. TODO: for now, just return plain text.
@@ -22,7 +52,7 @@ func ShowReviewHandler(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	fmt.Println(id)
 	if err != nil || id < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid id parameter: %s", c.Param("id"))})
+		r_errors.RespondError(c, r_errors.ResponseError{StatusCode: http.StatusBadRequest, Message: fmt.Sprintf("invalid id parameter: %s", c.Param("id"))})
 		return
 	}
 
