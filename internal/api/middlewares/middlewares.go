@@ -12,7 +12,7 @@ import (
 func BodySizeLimiter(maxSize int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.ContentLength > maxSize {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, r_errors.ResponseError{StatusCode: http.StatusInternalServerError, Message: fmt.Sprintf("Error - request body exceed %d bytes", maxSize)})
+			c.AbortWithStatusJSON(http.StatusUnprocessableEntity, r_errors.ResponseError{StatusCode: http.StatusInternalServerError, Message: fmt.Sprintf("Error - request body exceed %d bytes", maxSize)})
 			return
 		}
 
