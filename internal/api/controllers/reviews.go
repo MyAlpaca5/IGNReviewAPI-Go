@@ -44,7 +44,7 @@ func CreateReviewHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, review)
+	c.JSON(http.StatusAccepted, review)
 }
 
 // ReviewsGETHandler handles "GET /api/reviews/:id" endpoint. TODO: for now, just return plain text.
