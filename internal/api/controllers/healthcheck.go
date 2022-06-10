@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// HealthcheckHandler handles "GET /api/healthcheck" endpoint. TODO: for now, just return plain text.
+// HealthcheckHandler handles "GET /api/healthcheck" endpoint.
 func HealthcheckHandler(c *gin.Context) {
 	hc := schemas.Healthcheck{
 		Status: "available",
