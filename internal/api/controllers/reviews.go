@@ -37,7 +37,7 @@ func CreateReviewHandler(c *gin.Context) {
 		case errors.As(err, &validationErr):
 			response.Message = r_errors.ValidationError(validationErr)
 		default:
-			response.Message = err.Error()
+			response.Message = "Unknown Error - " + err.Error()
 		}
 
 		r_errors.RespondError(c, response)

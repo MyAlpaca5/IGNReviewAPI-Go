@@ -45,7 +45,7 @@ func ValidationError(err validator.ValidationErrors) string {
 	var b strings.Builder
 
 	for _, f := range err {
-		fmt.Fprintf(&b, "field '%s' doesn't satisfy '%s' tag\n", f.Field(), f.ActualTag())
+		fmt.Fprintf(&b, "Validation Error - field '%s' doesn't satisfy '%s' tag\n", f.Field(), f.ActualTag())
 	}
 
 	return b.String()
@@ -56,8 +56,8 @@ func GINError(err gin.Error) string {
 	// TODO: include other error types, https://github.com/gin-gonic/gin/blob/v1.8.1/errors.go
 	switch err.Type {
 	case gin.ErrorTypeBind:
-		return "Binding Error - check your request data!"
+		return "GIN Error - fail to bind"
 	default:
-		return "Unknown GIN Error"
+		return "GIN Error - unknown"
 	}
 }
