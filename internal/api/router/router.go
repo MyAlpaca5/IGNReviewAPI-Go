@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/controllers"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/middlewares"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -15,8 +16,9 @@ func NewRouter() *gin.Engine {
 	router := gin.Default()
 
 	// --- Bind Middlewares ---
+	router.Use(middlewares.BodySizeLimiter(65_536))
 
-	// --- Bind Custom Validation Mehod ---
+	// --- Define Custom Validation Mehod ---
 	// https://pkg.go.dev/github.com/go-playground/validator/v10#Validate.RegisterTagNameFunc
 	// use the names which have been specified for JSON representations of structs, rather than normal Go field names
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
