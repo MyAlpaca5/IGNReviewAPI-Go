@@ -9,14 +9,14 @@ import (
 	"time"
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
-	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/schemas"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 // ReviewsGETHandler handles "POST /api/reviews" endpoint.
 func CreateReviewHandler(c *gin.Context) {
-	var review schemas.Review
+	var review models.Review
 	if err := c.ShouldBindJSON(&review); err != nil {
 		var ginErr gin.Error
 		var validationErr validator.ValidationErrors
@@ -57,22 +57,16 @@ func ShowReviewHandler(c *gin.Context) {
 	}
 
 	// TEST
-	r := schemas.Review{
-		Name:             strconv.Itoa(int(id)),
-		ShortName:        "short test",
-		LongDescription:  "",
-		ShortDescription: "short test",
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now().Add(time.Hour),
-		ReviewURL:        "url to here",
-		ReviewScore:      4.5,
-		Slug:             "test me",
-		MediaType:        "abc",
-		GenreList:        nil,
-		CreatorList:      []string{},
-		PublisherList:    []string{"a"},
-		FranchiseList:    []string{"a", "b"},
-		RegionList:       []string{"a", "b", "c"},
+	r := models.Review{
+		Name:        strconv.Itoa(int(id)),
+		Description: "short test",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now().Add(time.Hour),
+		ReviewURL:   "url to here",
+		ReviewScore: 4.5,
+		MediaType:   "abc",
+		GenreList:   nil,
+		CreatorList: []string{},
 	}
 
 	c.JSON(http.StatusOK, r)

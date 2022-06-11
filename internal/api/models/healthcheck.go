@@ -1,4 +1,4 @@
-package schemas
+package models
 
 type SystemInfo struct {
 	Env     string `json:"env"`
