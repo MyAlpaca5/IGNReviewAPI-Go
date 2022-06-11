@@ -9,7 +9,7 @@ import (
 )
 
 func NewPGXPool() (*pgxpool.Pool, func(), error) {
-	conf, err := pgxpool.ParseConfig(viper.GetString("IGN_DB_DSN"))
+	conf, err := pgxpool.ParseConfig(viper.GetString("db_url"))
 	if err != nil {
 		return nil, nil, err
 	}

@@ -13,5 +13,5 @@ func InitConfig() {
 	viper.BindPFlags(flag.CommandLine)
 
 	viper.SetDefault("version", "1.0.0")
-	viper.BindEnv("db_dsn", "IGN_DB_DSN")
+	viper.BindEnv("db_url", "IGN_DB_URL")
 }
