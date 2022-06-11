@@ -1,0 +1,1 @@
+ALTER TABLE reviews DROP CONSTRAINT IF EXISTS review_score_check;
