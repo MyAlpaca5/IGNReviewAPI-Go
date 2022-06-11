@@ -9,7 +9,7 @@ import (
 	"time"
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
-	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/models"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

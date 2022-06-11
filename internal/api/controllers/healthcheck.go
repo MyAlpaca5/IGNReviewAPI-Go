@@ -3,7 +3,7 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/models"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )
