@@ -1,4 +1,4 @@
-package api
+package internal
 
 import (
 	"fmt"
@@ -11,19 +11,18 @@ import (
 )
 
 func Run() {
-	// TODO: move this function into other file out of api folder
 	// initialize viper for configuration
 	utils.InitConfig()
 
-	// initialize conn variable for database connection
-	_, close, err := db.NewPGXPool()
+	// create repo variable for database interaction
+	pool, close, err := db.InitDBConnection()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal - %v", err)
+		fmt.Fprintf(os.Stderr, "DB ERROR - %v", err)
 		os.Exit(1)
 	}
 	defer close()
 
-	// initialize router
-	router := router.NewRouter()
+	// create new router
+	router := router.NewRouter(pool)
 	router.Run(":" + viper.GetString("port"))
 }
