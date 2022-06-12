@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
@@ -25,6 +24,7 @@ type ReviewController struct {
 func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 	var review models.Review
 	if err := c.ShouldBindJSON(&review); err != nil {
+		// check specific error for better response message
 		var ginErr gin.Error
 		var validationErr validator.ValidationErrors
 		var syntaxError *json.SyntaxError
@@ -51,9 +51,17 @@ func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 		return
 	}
 
-	// TODO: insert into database
-	ctrl.repo.Create(ctrl.Pool, review)
-	c.JSON(http.StatusAccepted, review)
+	id, err := ctrl.repo.Create(ctrl.Pool, review)
+	if err != nil {
+		response := r_errors.ResponseError{
+			StatusCode: http.StatusInternalServerError,
+			Message:    "DB Error - cannot create new review",
+		}
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"message": fmt.Sprintf("review created successfully, assigned id is %d", id)})
 }
 
 // ReviewsGETHandler handles "GET /api/reviews/:id" endpoint. TODO: for now, just return plain text.
@@ -65,20 +73,15 @@ func (ctrl ReviewController) ShowReviewHandler(c *gin.Context) {
 		return
 	}
 
-	// TEST
-	ctrl.repo.Read(ctrl.Pool, int(id))
-	r := models.Review{
-		Name:        strconv.Itoa(int(id)),
-		Description: "short test",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now().Add(time.Hour),
-		ReviewURL:   "url to here",
-		ReviewScore: 4.5,
-		MediaType:   "abc",
-		GenreList:   nil,
-		CreatorList: []string{},
+	review, err := ctrl.repo.Read(ctrl.Pool, int(id))
+	if err != nil {
+		response := r_errors.ResponseError{
+			StatusCode: http.StatusInternalServerError,
+			Message:    fmt.Sprintf("DB Error - cannot get review with id = %d, err = %s", id, err.Error()),
+		}
+		c.JSON(http.StatusInternalServerError, response)
+		return
 	}
 
-	c.JSON(http.StatusOK, r)
-	// TEST END
+	c.JSON(http.StatusOK, review)
 }
