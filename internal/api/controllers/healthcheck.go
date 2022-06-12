@@ -8,8 +8,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+type HealthcheckController struct{}
+
 // HealthcheckHandler handles "GET /api/healthcheck" endpoint.
-func HealthcheckHandler(c *gin.Context) {
+func (controller HealthcheckController) HealthcheckHandler(c *gin.Context) {
 	hc := models.Healthcheck{
 		Status: "available",
 		SystemInfo: models.SystemInfo{

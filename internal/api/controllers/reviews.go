@@ -10,12 +10,19 @@ import (
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+type ReviewController struct {
+	repo repositories.ReviewRepo
+	Pool *pgxpool.Pool
+}
+
 // ReviewsGETHandler handles "POST /api/reviews" endpoint.
-func CreateReviewHandler(c *gin.Context) {
+func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 	var review models.Review
 	if err := c.ShouldBindJSON(&review); err != nil {
 		var ginErr gin.Error
@@ -44,11 +51,13 @@ func CreateReviewHandler(c *gin.Context) {
 		return
 	}
 
+	// TODO: insert into database
+	ctrl.repo.Create(ctrl.Pool, review)
 	c.JSON(http.StatusAccepted, review)
 }
 
 // ReviewsGETHandler handles "GET /api/reviews/:id" endpoint. TODO: for now, just return plain text.
-func ShowReviewHandler(c *gin.Context) {
+func (ctrl ReviewController) ShowReviewHandler(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	fmt.Println(id)
 	if err != nil || id < 1 {
@@ -57,6 +66,7 @@ func ShowReviewHandler(c *gin.Context) {
 	}
 
 	// TEST
+	ctrl.repo.Read(ctrl.Pool, int(id))
 	r := models.Review{
 		Name:        strconv.Itoa(int(id)),
 		Description: "short test",

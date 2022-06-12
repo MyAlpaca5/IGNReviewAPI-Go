@@ -10,9 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-func NewRouter() *gin.Engine {
+func NewRouter(pool *pgxpool.Pool) *gin.Engine {
 	// Default With the Logger and Recovery middleware already attached
 	router := gin.Default()
 
@@ -47,10 +48,14 @@ func NewRouter() *gin.Engine {
 	router.HandleMethodNotAllowed = true
 	// router.NoMethod(replyWithUnsupportedHTTPMethodError)
 
+	// --- Create Controllers ---
+	var healthcheckController = controllers.HealthcheckController{}
+	var reviewController = controllers.ReviewController{Pool: pool}
+
 	// --- Set Routes and Handlers ---
-	router.GET("/api/healthcheck", controllers.HealthcheckHandler)
-	router.GET("/api/reviews/:id", controllers.ShowReviewHandler)
-	router.POST("/api/reviews", controllers.CreateReviewHandler)
+	router.GET("/api/healthcheck", healthcheckController.HealthcheckHandler)
+	router.GET("/api/reviews/:id", reviewController.ShowReviewHandler)
+	router.POST("/api/reviews", reviewController.CreateReviewHandler)
 
 	return router
 }
