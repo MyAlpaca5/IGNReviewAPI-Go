@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS reviews (
     review_score real NOT NULL DEFAULT 0.0,
     media_type text,
     genre_list text[],
-    creator_list text[]
+    creator_list text[],
+    version bigint NOT NULL DEFAULT 0
 );

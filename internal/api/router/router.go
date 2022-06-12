@@ -7,6 +7,7 @@ import (
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/controllers"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/middlewares"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -50,11 +51,13 @@ func NewRouter(pool *pgxpool.Pool) *gin.Engine {
 
 	// --- Create Controllers ---
 	var healthcheckController = controllers.HealthcheckController{}
-	var reviewController = controllers.ReviewController{Pool: pool}
+	var reviewController = controllers.ReviewController{Repo: repositories.ReviewRepo{}, Pool: pool}
 
 	// --- Set Routes and Handlers ---
 	router.GET("/api/healthcheck", healthcheckController.HealthcheckHandler)
 	router.GET("/api/reviews/:id", reviewController.ShowReviewHandler)
+	router.DELETE("/api/reviews/:id", reviewController.DeleteReviewHandler)
+	router.PATCH("/api/reviews/:id", reviewController.UpdateReviewHandler)
 	router.POST("/api/reviews", reviewController.CreateReviewHandler)
 
 	return router

@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -28,12 +28,12 @@ func (r ReviewRepo) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 
 func (r ReviewRepo) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
 	query := `
-	SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list
+	SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list, version
 	FROM reviews
 	WHERE id = $1`
 
 	var review models.Review
-	err := pool.QueryRow(context.Background(), query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList)
+	err := pool.QueryRow(context.Background(), query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList, &review.Version)
 	if err != nil {
 		return models.Review{}, err
 	}
@@ -43,18 +43,45 @@ func (r ReviewRepo) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
 
 func (r ReviewRepo) ReadAll(pool *pgxpool.Pool) ([]models.Review, error) {
 	// query := `
-	// SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list
+	// SELECT *
 	// FROM reviews`
 
 	return nil, nil
 }
 
 func (r ReviewRepo) Update(pool *pgxpool.Pool, id int, m models.Review) error {
-	fmt.Printf("Called ReviewRepo Update! TotalConns is %v", pool.Stat().TotalConns())
+	query := `
+	UPDATE reviews 
+	SET name=$1, description=$2, updated_at=$3, review_score=$4, media_type=$5, genre_list=$6, creator_list=$7, version = version + 1
+	WHERE id = $8 and version = $9`
+
+	// version here is used as a simple locking mechanism to prevent data race
+	args := []interface{}{m.Name, m.Description, m.UpdatedAt, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList, id, m.Version}
+	commandTag, err := pool.Exec(context.Background(), query, args...)
+	if err != nil {
+		return err
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return errors.New("record not found")
+	}
+
 	return nil
 }
 
 func (r ReviewRepo) Delete(pool *pgxpool.Pool, id int) error {
-	fmt.Printf("Called ReviewRepo Delete! TotalConns is %v", pool.Stat().TotalConns())
+	query := `
+	DELETE FROM reviews
+	WHERE id = $1`
+
+	commandTag, err := pool.Exec(context.Background(), query, id)
+	if err != nil {
+		return err
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return errors.New("record not found")
+	}
+
 	return nil
 }
