@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitDBConnection() (*pgxpool.Pool, func(), error) {
+func NewPool() (*pgxpool.Pool, func(), error) {
 	conf, err := pgxpool.ParseConfig(viper.GetString("db_url"))
 	if err != nil {
 		return nil, nil, err

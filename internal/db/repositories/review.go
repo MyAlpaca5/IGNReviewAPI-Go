@@ -12,9 +12,9 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type ReviewRepo struct{}
+type Review struct{}
 
-func (r ReviewRepo) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
+func (r Review) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 	query := `
 	INSERT INTO reviews (name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -32,7 +32,7 @@ func (r ReviewRepo) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 	return id, nil
 }
 
-func (r ReviewRepo) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
+func (r Review) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
 	query := `
 	SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list, version
 	FROM reviews
@@ -49,7 +49,7 @@ func (r ReviewRepo) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
 	return review, nil
 }
 
-func (r ReviewRepo) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string) ([]models.Review, error) {
+func (r Review) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string) ([]models.Review, error) {
 	whereClause, err := generateWhereClause(queryParamaters)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (r ReviewRepo) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]str
 	return reviews, nil
 }
 
-func (r ReviewRepo) Update(pool *pgxpool.Pool, id int, m models.Review) error {
+func (r Review) Update(pool *pgxpool.Pool, id int, m models.Review) error {
 	// version here is used as a simple locking mechanism to prevent data race
 	query := `
 	UPDATE reviews 
@@ -126,7 +126,7 @@ func (r ReviewRepo) Update(pool *pgxpool.Pool, id int, m models.Review) error {
 	return nil
 }
 
-func (r ReviewRepo) Delete(pool *pgxpool.Pool, id int) error {
+func (r Review) Delete(pool *pgxpool.Pool, id int) error {
 	query := `
 	DELETE FROM reviews
 	WHERE id = $1`
@@ -175,7 +175,7 @@ func generateWhereClause(queryParamaters map[string][]string) (string, error) {
 	return "", nil
 }
 
-var orderOptions = [...]string{"id", "-id", "name", "-name", "score", "-score"}
+var orderOptions = [...]string{"id", "-id", "name", "-name", "review_score", "-review_score"}
 
 // generateOrderByClause generate a order by clause based on the query parameters
 func generateOrderByClause(queryParamaters map[string][]string) (string, error) {

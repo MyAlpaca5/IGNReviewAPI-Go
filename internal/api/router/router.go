@@ -14,7 +14,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-func NewRouter(pool *pgxpool.Pool) *gin.Engine {
+func New(pool *pgxpool.Pool) *gin.Engine {
 	// Default With the Logger and Recovery middleware already attached
 	router := gin.Default()
 
@@ -51,7 +51,7 @@ func NewRouter(pool *pgxpool.Pool) *gin.Engine {
 
 	// --- Create Controllers ---
 	var healthcheckController = controllers.HealthcheckController{}
-	var reviewController = controllers.ReviewController{Repo: repositories.ReviewRepo{}, Pool: pool}
+	var reviewController = controllers.ReviewController{Repo: repositories.Review{}, Pool: pool}
 
 	// --- Set Routes and Handlers ---
 	router.GET("/api/healthcheck", healthcheckController.HealthcheckHandler)

@@ -15,7 +15,7 @@ func Run() {
 	utils.InitConfig()
 
 	// create repo variable for database interaction
-	pool, close, err := db.InitDBConnection()
+	pool, close, err := db.NewPool()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "DB ERROR - %v", err)
 		os.Exit(1)
@@ -23,6 +23,6 @@ func Run() {
 	defer close()
 
 	// create new router
-	router := router.NewRouter(pool)
+	router := router.New(pool)
 	router.Run(":" + viper.GetString("port"))
 }
