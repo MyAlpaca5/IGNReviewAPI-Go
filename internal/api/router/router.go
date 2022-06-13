@@ -18,7 +18,7 @@ func NewRouter(pool *pgxpool.Pool) *gin.Engine {
 	// Default With the Logger and Recovery middleware already attached
 	router := gin.Default()
 
-	// --- Set Custom Validator Methods ---
+	// --- Set Custom Validator Methods for JSON data ---
 	// https://pkg.go.dev/github.com/go-playground/validator/v10#Validate
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		// use the names which have been specified for JSON representations of structs, rather than normal Go field names
@@ -58,6 +58,7 @@ func NewRouter(pool *pgxpool.Pool) *gin.Engine {
 	router.GET("/api/reviews/:id", reviewController.ShowReviewHandler)
 	router.DELETE("/api/reviews/:id", reviewController.DeleteReviewHandler)
 	router.PATCH("/api/reviews/:id", reviewController.UpdateReviewHandler)
+	router.GET("/api/reviews", reviewController.ListReviewsHandler)
 	router.POST("/api/reviews", reviewController.CreateReviewHandler)
 
 	return router

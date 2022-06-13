@@ -13,7 +13,7 @@ type model interface {
 type Repo[M model] interface {
 	Create(pool *pgxpool.Pool, m M) (int, error)
 	Read(pool *pgxpool.Pool, id int) (M, error)
-	ReadAll(pool *pgxpool.Pool) ([]M, error)
+	ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string) ([]M, error)
 	Update(pool *pgxpool.Pool, id int, m M) error
 	Delete(pool *pgxpool.Pool, id int) error
 }

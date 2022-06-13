@@ -64,7 +64,7 @@ func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"message": fmt.Sprintf("review created successfully, assigned id is %d", id)})
 }
 
-// ReviewsGETHandler handles "GET /api/reviews/:id" endpoint. It will fetch a review entry from database based on id.
+// ShowReviewHandler handles "GET /api/reviews/:id" endpoint. It will fetch a review entry from database based on id.
 func (ctrl ReviewController) ShowReviewHandler(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id < 1 {
@@ -85,7 +85,7 @@ func (ctrl ReviewController) ShowReviewHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, review)
 }
 
-// ReviewsGETHandler handles "PATCH /api/reviews/:id" endpoint. It will update the review entry in the database based on the user input.
+// UpdateReviewHandler handles "PATCH /api/reviews/:id" endpoint. It will update the review entry in the database based on the user input.
 // Note: created_at and review_url fields are deemed as non-mutable, therefore, even user pass new data for those two field, they will be ignored.
 func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
 	var review models.ReviewForUpdate
@@ -186,7 +186,7 @@ func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("review with id = %d updated successfully", id)})
 }
 
-// ReviewsGETHandler handles "DELETE /api/reviews/:id" endpoint. It will delete a review entry from database based on id.
+// DeleteReviewHandler handles "DELETE /api/reviews/:id" endpoint. It will delete a review entry from database based on id.
 func (ctrl ReviewController) DeleteReviewHandler(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id < 1 {
@@ -205,4 +205,15 @@ func (ctrl ReviewController) DeleteReviewHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("review with id = %d deleted successfully", id)})
+}
+
+// ListReviewsHandler handles "GET /api/reviews" endpoint.
+func (ctrl ReviewController) ListReviewsHandler(c *gin.Context) {
+	reviews, err := ctrl.Repo.ReadAll(ctrl.Pool, c.Request.URL.Query())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, r_errors.ResponseError{StatusCode: http.StatusBadRequest, Message: fmt.Sprintf("DB Error - %s", err.Error())})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"reviews": reviews})
 }

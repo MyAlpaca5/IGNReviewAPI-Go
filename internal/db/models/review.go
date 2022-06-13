@@ -6,6 +6,7 @@ import (
 
 // Review is a struct used in POST method and also used for passing review to different method.
 type Review struct {
+	ID          int       `json:"-"`
 	Name        string    `json:"name" binding:"required"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at" binding:"required"`

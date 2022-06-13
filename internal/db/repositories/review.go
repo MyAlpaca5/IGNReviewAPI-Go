@@ -3,6 +3,9 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
@@ -46,12 +49,51 @@ func (r ReviewRepo) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
 	return review, nil
 }
 
-func (r ReviewRepo) ReadAll(pool *pgxpool.Pool) ([]models.Review, error) {
-	// query := `
-	// SELECT *
-	// FROM reviews`
+func (r ReviewRepo) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string) ([]models.Review, error) {
+	whereClause, err := generateWhereClause(queryParamaters)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	orderByClause, err := generateOrderByClause(queryParamaters)
+	if err != nil {
+		return nil, err
+	}
+
+	limitClause, err := generateLimitClause(queryParamaters)
+	if err != nil {
+		return nil, err
+	}
+
+	query := fmt.Sprintf("SELECT * FROM reviews %s %s %s", whereClause, orderByClause, limitClause)
+	fmt.Println(query)
+	var reviews []models.Review
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	// https://pkg.go.dev/github.com/jackc/pgx#hdr-Query_Interface
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate through the result set
+	for rows.Next() {
+		var review models.Review
+		err = rows.Scan(&review.ID, &review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList, &review.Version)
+		if err != nil {
+			return nil, err
+		}
+		reviews = append(reviews, review)
+	}
+
+	// Any errors encountered by rows.Next or rows.Scan will be returned here
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	return reviews, nil
 }
 
 func (r ReviewRepo) Update(pool *pgxpool.Pool, id int, m models.Review) error {
@@ -88,9 +130,78 @@ func (r ReviewRepo) Delete(pool *pgxpool.Pool, id int) error {
 		return err
 	}
 
-	if commandTag.RowsAffected() == 0 {
+	if commandTag.RowsAffected() != 1 {
 		return errors.New("record not found")
 	}
 
 	return nil
+}
+
+// generateWhereClause generate a where clause based on the query parameters
+func generateWhereClause(queryParamaters map[string][]string) (string, error) {
+	var whereClause = make([]string, 0, 3)
+
+	if name := queryParamaters["name"]; name != nil {
+		whereClause = append(whereClause, fmt.Sprintf("name ~ '.*%s,*'", name[0]))
+	}
+
+	if score := queryParamaters["scoreMin"]; score != nil {
+		val, err := strconv.ParseFloat(score[0], 32)
+		if err != nil {
+			return "", errors.New("query parameter 'scoreMin' must be float type")
+		} else if val < 0.0 || val > 10.0 {
+			return "", errors.New("query parameter 'scoreMin' must be 0 <= value <= 10")
+		}
+		whereClause = append(whereClause, fmt.Sprintf("review_score >= %s", score[0]))
+	}
+
+	if genres := queryParamaters["genres"]; genres != nil {
+		whereClause = append(whereClause, fmt.Sprintf("genre_list @> '{%s}'", strings.Join(genres, ",")))
+	}
+
+	if len(whereClause) != 0 {
+		return "WHERE " + strings.Join(whereClause, " AND "), nil
+	}
+
+	return "", nil
+}
+
+// generateLimitClause generate a limit clause based on the query parameters
+func generateLimitClause(queryParamaters map[string][]string) (string, error) {
+	if limit := queryParamaters["limit"]; limit != nil {
+		_, err := strconv.Atoi(limit[0])
+		if err != nil {
+			return "", errors.New("query parameter 'top' must be integer type")
+		}
+		return "LIMIT " + limit[0], nil
+	}
+
+	return "LIMIT 10", nil
+}
+
+var orderOptions = [...]string{"id", "-id", "name", "-name", "score", "-score"}
+
+// generateOrderByClause generate a order by clause based on the query parameters
+func generateOrderByClause(queryParamaters map[string][]string) (string, error) {
+	order := queryParamaters["order"]
+	if order == nil {
+		return "ORDER BY id", nil
+	}
+
+	valid := false
+	for _, o := range orderOptions {
+		if order[0] == o {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		return "", errors.New(fmt.Sprintf("query parameter 'order' must be one of followings: %v", orderOptions))
+	}
+
+	if order[0][0] == '-' {
+		return "ORDER BY " + order[0][1:] + " DESC", nil
+	}
+	return "ORDER BY " + order[0], nil
 }
