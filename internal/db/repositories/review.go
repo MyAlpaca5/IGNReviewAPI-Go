@@ -65,8 +65,16 @@ func (r ReviewRepo) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]str
 		return nil, err
 	}
 
-	query := fmt.Sprintf("SELECT * FROM reviews %s %s %s", whereClause, orderByClause, limitClause)
-	fmt.Println(query)
+	offsetClause, err := generateOffsetClause(queryParamaters)
+	if err != nil {
+		return nil, err
+	}
+
+	query := fmt.Sprintf(`
+	SELECT * 
+	FROM reviews 
+	%s %s %s %s`, whereClause, orderByClause, limitClause, offsetClause)
+
 	var reviews []models.Review
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -142,15 +150,16 @@ func generateWhereClause(queryParamaters map[string][]string) (string, error) {
 	var whereClause = make([]string, 0, 3)
 
 	if name := queryParamaters["name"]; name != nil {
-		whereClause = append(whereClause, fmt.Sprintf("name ~ '.*%s,*'", name[0]))
+		// using PostgreSQL build-in full text search
+		whereClause = append(whereClause, fmt.Sprintf("(to_tsvector('simple', name) @@ plainto_tsquery('simple', '%s'))", name[0]))
 	}
 
 	if score := queryParamaters["scoreMin"]; score != nil {
 		val, err := strconv.ParseFloat(score[0], 32)
 		if err != nil {
-			return "", errors.New("query parameter 'scoreMin' must be float type")
+			return "", errors.New("query parameter 'scoreMin' must be float type and 0 <= scoreMin <= 10")
 		} else if val < 0.0 || val > 10.0 {
-			return "", errors.New("query parameter 'scoreMin' must be 0 <= value <= 10")
+			return "", errors.New("query parameter 'scoreMin' must be 0 <= scoreMin <= 10")
 		}
 		whereClause = append(whereClause, fmt.Sprintf("review_score >= %s", score[0]))
 	}
@@ -164,19 +173,6 @@ func generateWhereClause(queryParamaters map[string][]string) (string, error) {
 	}
 
 	return "", nil
-}
-
-// generateLimitClause generate a limit clause based on the query parameters
-func generateLimitClause(queryParamaters map[string][]string) (string, error) {
-	if limit := queryParamaters["limit"]; limit != nil {
-		_, err := strconv.Atoi(limit[0])
-		if err != nil {
-			return "", errors.New("query parameter 'top' must be integer type")
-		}
-		return "LIMIT " + limit[0], nil
-	}
-
-	return "LIMIT 10", nil
 }
 
 var orderOptions = [...]string{"id", "-id", "name", "-name", "score", "-score"}
@@ -204,4 +200,39 @@ func generateOrderByClause(queryParamaters map[string][]string) (string, error) 
 		return "ORDER BY " + order[0][1:] + " DESC", nil
 	}
 	return "ORDER BY " + order[0], nil
+}
+
+// generateLimitClause generate a limit clause based on the query parameters
+func generateLimitClause(queryParamaters map[string][]string) (string, error) {
+	if limit := queryParamaters["page_size"]; limit != nil {
+		_, err := strconv.Atoi(limit[0])
+		if err != nil {
+			return "", errors.New("query parameter 'page_size' must be positive integer type")
+		}
+		return "LIMIT " + limit[0], nil
+	}
+
+	return "LIMIT 10", nil
+}
+
+// generateOffsetClause generate a limit clause based on the query parameters
+func generateOffsetClause(queryParamaters map[string][]string) (string, error) {
+	page_size := 1
+	if limit := queryParamaters["page_size"]; limit != nil {
+		p, err := strconv.Atoi(limit[0])
+		if err != nil {
+			return "", errors.New("query parameter 'page_size' must be positive integer type")
+		}
+		page_size = p
+	}
+
+	if offset := queryParamaters["page"]; offset != nil {
+		page, err := strconv.Atoi(offset[0])
+		if err != nil {
+			return "", errors.New("query parameter 'page' must be positive integer type")
+		}
+		return fmt.Sprintf("OFFSET %d", (page-1)*page_size), nil
+	}
+
+	return "", nil
 }
