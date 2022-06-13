@@ -41,7 +41,8 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 		})
 	}
 
-	// --- Set Middlewares ---
+	// --- Set Global Middlewares ---
+	router.Use(middlewares.RequestRateLimiter(2, 4))
 	router.Use(middlewares.BodySizeLimiter(65_536))
 
 	// --- Set Error Handlers ---

@@ -8,6 +8,7 @@ require (
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.12.0
+	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 )
 
 require (
