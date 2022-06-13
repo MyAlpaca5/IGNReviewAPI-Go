@@ -41,7 +41,7 @@ func RequestRateLimiter(r rate.Limit, b int) gin.HandlerFunc {
 		}
 
 		if !ipMap[ip].Allow() {
-			mu.Unlock() // need release the lock here, otherwise, no further request from this IP will be accepted
+			mu.Unlock() // need to release the lock here, otherwise, no further request from this IP will be accepted
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, r_errors.ResponseError{StatusCode: http.StatusTooManyRequests, Message: "too many request, please try later"})
 			return
 		}
