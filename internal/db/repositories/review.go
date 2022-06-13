@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -18,7 +19,9 @@ func (r ReviewRepo) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 
 	var id int
 	args := []interface{}{m.Name, m.Description, m.CreatedAt, m.UpdatedAt, m.ReviewURL, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList}
-	err := pool.QueryRow(context.Background(), query, args...).Scan(&id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := pool.QueryRow(ctx, query, args...).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -33,7 +36,9 @@ func (r ReviewRepo) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
 	WHERE id = $1`
 
 	var review models.Review
-	err := pool.QueryRow(context.Background(), query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList, &review.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	err := pool.QueryRow(ctx, query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList, &review.Version)
 	if err != nil {
 		return models.Review{}, err
 	}
@@ -50,14 +55,16 @@ func (r ReviewRepo) ReadAll(pool *pgxpool.Pool) ([]models.Review, error) {
 }
 
 func (r ReviewRepo) Update(pool *pgxpool.Pool, id int, m models.Review) error {
+	// version here is used as a simple locking mechanism to prevent data race
 	query := `
 	UPDATE reviews 
 	SET name=$1, description=$2, updated_at=$3, review_score=$4, media_type=$5, genre_list=$6, creator_list=$7, version = version + 1
 	WHERE id = $8 and version = $9`
 
-	// version here is used as a simple locking mechanism to prevent data race
 	args := []interface{}{m.Name, m.Description, m.UpdatedAt, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList, id, m.Version}
-	commandTag, err := pool.Exec(context.Background(), query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	commandTag, err := pool.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -74,7 +81,9 @@ func (r ReviewRepo) Delete(pool *pgxpool.Pool, id int) error {
 	DELETE FROM reviews
 	WHERE id = $1`
 
-	commandTag, err := pool.Exec(context.Background(), query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	commandTag, err := pool.Exec(ctx, query, id)
 	if err != nil {
 		return err
 	}
