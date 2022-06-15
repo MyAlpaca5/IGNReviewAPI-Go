@@ -23,7 +23,7 @@ func BodySizeLimiter(maxSize int64) gin.HandlerFunc {
 }
 
 // RequestRateLimiter will limit the number of requests a client can sent over a short period of time. The restriction is IP based.
-// TODO: set up a eviction policy to delete old IP from the map when the time expired. Idea: least recent cache
+// TODO: set up a eviction policy to delete old IP from the map when the time expired. Idea: LRU cache
 func RequestRateLimiter(r rate.Limit, b int) gin.HandlerFunc {
 	var (
 		ipMap = make(map[string]*rate.Limiter)

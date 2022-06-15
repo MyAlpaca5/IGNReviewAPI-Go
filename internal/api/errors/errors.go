@@ -23,7 +23,7 @@ func (re ResponseError) Unwarp() error {
 	return re.Err
 }
 
-// JSON related errors
+// --- JSON related errors ---
 func JSONSyntaxError(err *json.SyntaxError) string {
 	return fmt.Sprintf("JSON Error - badly-formed JSON (at character %d)", err.Offset)
 }
@@ -36,7 +36,7 @@ func JSONUnmarshalTypeError(err *json.UnmarshalTypeError) string {
 	}
 }
 
-// validation related errors
+// --- validation related errors ---
 func ValidationError(err validator.ValidationErrors) string {
 	var b strings.Builder
 
@@ -47,7 +47,7 @@ func ValidationError(err validator.ValidationErrors) string {
 	return b.String()
 }
 
-// GIN related errors
+// --- GIN related errors ---
 func GINError(err gin.Error) string {
 	// TODO: include other error types, https://github.com/gin-gonic/gin/blob/v1.8.1/errors.go
 	switch err.Type {
