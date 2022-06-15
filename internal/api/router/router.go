@@ -2,7 +2,6 @@ package router
 
 import (
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/controllers"
@@ -28,16 +27,6 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 				return ""
 			}
 			return name
-		})
-
-		// check the review_url is a valid url to a IGN review article
-		v.RegisterValidation("ignurl", func(fl validator.FieldLevel) bool {
-			url := fl.Field().String()
-			matched, err := regexp.MatchString("^https://www.ign.com/articles/[12][0-9]{3}/(0[1-9]|1[0-2])/(0[1-9]|[1-2][0-9]|3[01])/.+$", url)
-			if !matched || err != nil {
-				return false
-			}
-			return true
 		})
 	}
 

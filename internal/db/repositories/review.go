@@ -16,12 +16,12 @@ type Review struct{}
 
 func (r Review) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 	query := `
-	INSERT INTO reviews (name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	INSERT INTO reviews (name, description, review_url, review_score, media_type, genre_list, creator_list)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)
 	RETURNING id`
 
 	var id int
-	args := []interface{}{m.Name, m.Description, m.CreatedAt, m.UpdatedAt, m.ReviewURL, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList}
+	args := []interface{}{m.Name, m.Description, m.ReviewURL, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	err := pool.QueryRow(ctx, query, args...).Scan(&id)
@@ -34,14 +34,14 @@ func (r Review) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 
 func (r Review) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
 	query := `
-	SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list, version
+	SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list
 	FROM reviews
 	WHERE id = $1`
 
 	var review models.Review
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	err := pool.QueryRow(ctx, query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList, &review.Version)
+	err := pool.QueryRow(ctx, query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList)
 	if err != nil {
 		return models.Review{}, err
 	}
@@ -89,7 +89,7 @@ func (r Review) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string)
 	// Iterate through the result set
 	for rows.Next() {
 		var review models.Review
-		err = rows.Scan(&review.ID, &review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList, &review.Version)
+		err = rows.Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt, &review.Name, &review.Description, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList)
 		if err != nil {
 			return nil, err
 		}
@@ -105,13 +105,13 @@ func (r Review) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string)
 }
 
 func (r Review) Update(pool *pgxpool.Pool, id int, m models.Review) error {
-	// version here is used as a simple locking mechanism to prevent data race
+	// updated_at here is used as a simple locking mechanism to prevent data race
 	query := `
 	UPDATE reviews 
-	SET name=$1, description=$2, updated_at=$3, review_score=$4, media_type=$5, genre_list=$6, creator_list=$7, version = version + 1
-	WHERE id = $8 and version = $9`
+	SET name=$1, description=$2, review_url=$3, review_score=$4, media_type=$5, genre_list=$6, creator_list=$7, updated_at=now() 
+	WHERE id = $8 and updated_at = $9`
 
-	args := []interface{}{m.Name, m.Description, m.UpdatedAt, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList, id, m.Version}
+	args := []interface{}{m.Name, m.Description, m.ReviewURL, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList, id, m.UpdatedAt}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	commandTag, err := pool.Exec(ctx, query, args...)
@@ -217,7 +217,7 @@ func generateLimitClause(queryParamaters map[string][]string) (string, error) {
 
 // generateOffsetClause generate a limit clause based on the query parameters
 func generateOffsetClause(queryParamaters map[string][]string) (string, error) {
-	page_size := 1
+	page_size := 10
 	if limit, found := queryParamaters["page_size"]; found {
 		p, err := strconv.Atoi(limit[0])
 		if err != nil {
