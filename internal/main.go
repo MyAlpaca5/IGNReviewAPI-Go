@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/router"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/config"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db"
-	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/utils"
 	"github.com/spf13/viper"
 )
 
 func Run() {
 	// --- initialize viper for configuration ---
-	utils.InitConfig()
+	config.InitConfig()
 
 	// --- create database pool connection ---
 	pool, close, err := db.NewPool()
