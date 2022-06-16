@@ -20,7 +20,7 @@ type ReviewController struct {
 	Pool *pgxpool.Pool
 }
 
-// ReviewsGETHandler handles "POST /api/reviews" endpoint. It will insert a new review entry to the database.
+// CreateReviewHandler handles "POST /api/reviews" endpoint. It will insert a new review entry to the database.
 func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 	var reviewIn models.ReviewIn
 	if err := c.ShouldBindJSON(&reviewIn); err != nil {
