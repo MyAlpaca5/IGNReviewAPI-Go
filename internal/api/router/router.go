@@ -43,15 +43,27 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	var healthcheckController = controllers.HealthcheckController{}
 	var reviewController = controllers.ReviewController{Repo: repositories.Review{}, Pool: pool}
 	var userController = controllers.UserController{Repo: repositories.User{}, Pool: pool}
+	var tokenController = controllers.TokenController{Repo: repositories.Token{}, Pool: pool}
 
-	// --- Set Routes and Handlers ---
-	router.GET("/api/healthcheck", healthcheckController.HealthcheckHandler)
-	router.GET("/api/reviews/:id", reviewController.ShowReviewHandler)
-	router.DELETE("/api/reviews/:id", reviewController.DeleteReviewHandler)
-	router.PATCH("/api/reviews/:id", reviewController.UpdateReviewHandler)
-	router.GET("/api/reviews", reviewController.ListReviewsHandler)
-	router.POST("/api/reviews", reviewController.CreateReviewHandler)
-	router.POST("/api/users", userController.CreateUserHandler)
+	// --- Set Routes, Handlers, and per-request Middlewares ---
+	public := router.Group("api")
+	{
+		public.GET("/healthcheck", healthcheckController.HealthcheckHandler)
+		public.POST("/tokens/authentication", tokenController.CreateAuthenticationTokenHandler)
+		public.POST("/users", userController.CreateUserHandler)
+	}
+
+	authorized := router.Group("api", middlewares.Authenticate(pool))
+	{
+		authorized.GET("/reviews/:id", reviewController.ShowReviewHandler)
+		authorized.DELETE("/reviews/:id", reviewController.DeleteReviewHandler)
+		authorized.PATCH("/reviews/:id", reviewController.UpdateReviewHandler)
+		authorized.GET("/reviews", reviewController.ListReviewsHandler)
+		authorized.POST("/reviews", reviewController.CreateReviewHandler)
+
+		// admin := authorized.Group("admin", adminprivilege)
+		// admin.GET("/metrics", getmetrics)
+	}
 
 	return router
 }

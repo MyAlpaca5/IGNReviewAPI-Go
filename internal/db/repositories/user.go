@@ -33,22 +33,22 @@ func (u User) Create(pool *pgxpool.Pool, m models.User) (int, error) {
 	return id, nil
 }
 
-// func (u User) ReadByUsername(pool *pgxpool.Pool, username string) (models.User, error) {
-// 	query := `
-// 	SELECT id, created_at, updated_at, username, password, email
-// 	FROM users
-// 	WHERE username = $1`
+func (u User) ReadByUsername(pool *pgxpool.Pool, username string) (models.User, error) {
+	query := `
+	SELECT id, created_at, updated_at, username, password, email
+	FROM users
+	WHERE username = $1`
 
-// 	var user models.User
-// 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-// 	defer cancel()
-// 	err := pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Username, &user.PasswordHash, &user.Email)
-// 	if err != nil {
-// 		return models.User{}, err
-// 	}
+	var user models.User
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	err := pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Username, &user.PasswordHash, &user.Email)
+	if err != nil {
+		return models.User{}, err
+	}
 
-// 	return user, nil
-// }
+	return user, nil
+}
 
 // func (u User) UpdateByID(pool *pgxpool.Pool, m models.User, id int) error {
 // 	// updated_at here is used as a simple locking mechanism to prevent data race
