@@ -42,6 +42,7 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	// --- Create Controllers ---
 	var healthcheckController = controllers.HealthcheckController{}
 	var reviewController = controllers.ReviewController{Repo: repositories.Review{}, Pool: pool}
+	var userController = controllers.UserController{Repo: repositories.User{}, Pool: pool}
 
 	// --- Set Routes and Handlers ---
 	router.GET("/api/healthcheck", healthcheckController.HealthcheckHandler)
@@ -50,6 +51,7 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	router.PATCH("/api/reviews/:id", reviewController.UpdateReviewHandler)
 	router.GET("/api/reviews", reviewController.ListReviewsHandler)
 	router.POST("/api/reviews", reviewController.CreateReviewHandler)
+	router.POST("/api/users", userController.CreateUserHandler)
 
 	return router
 }
