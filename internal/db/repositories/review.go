@@ -32,7 +32,7 @@ func (r Review) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 	return id, nil
 }
 
-func (r Review) Read(pool *pgxpool.Pool, id int) (models.Review, error) {
+func (r Review) ReadByID(pool *pgxpool.Pool, id int) (models.Review, error) {
 	query := `
 	SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list
 	FROM reviews
@@ -104,7 +104,7 @@ func (r Review) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string)
 	return reviews, nil
 }
 
-func (r Review) Update(pool *pgxpool.Pool, id int, m models.Review) error {
+func (r Review) UpdateByID(pool *pgxpool.Pool, id int, m models.Review) error {
 	// updated_at here is used as a simple locking mechanism to prevent data race
 	query := `
 	UPDATE reviews 
@@ -126,7 +126,7 @@ func (r Review) Update(pool *pgxpool.Pool, id int, m models.Review) error {
 	return nil
 }
 
-func (r Review) Delete(pool *pgxpool.Pool, id int) error {
+func (r Review) DeleteByID(pool *pgxpool.Pool, id int) error {
 	query := `
 	DELETE FROM reviews
 	WHERE id = $1`

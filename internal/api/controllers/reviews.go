@@ -62,7 +62,7 @@ func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{"message": fmt.Sprintf("review created successfully, assigned id is %d", id)})
+	c.JSON(http.StatusCreated, gin.H{"message": fmt.Sprintf("review created successfully, assigned id is %d", id)})
 }
 
 // ShowReviewHandler handles "GET /api/reviews/:id" endpoint. It will fetch a review entry from database based on id.
@@ -78,7 +78,7 @@ func (ctrl ReviewController) ShowReviewHandler(c *gin.Context) {
 		return
 	}
 
-	review, err := ctrl.Repo.Read(ctrl.Pool, int(id))
+	review, err := ctrl.Repo.ReadByID(ctrl.Pool, int(id))
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -125,7 +125,7 @@ func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
 	}
 
 	// read original values
-	original, err := ctrl.Repo.Read(ctrl.Pool, int(id))
+	original, err := ctrl.Repo.ReadByID(ctrl.Pool, int(id))
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -159,7 +159,7 @@ func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
 		updated.CreatorList = reviewIn.CreatorList
 	}
 
-	err = ctrl.Repo.Update(ctrl.Pool, int(id), updated)
+	err = ctrl.Repo.UpdateByID(ctrl.Pool, int(id), updated)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusConflict,
@@ -185,7 +185,7 @@ func (ctrl ReviewController) DeleteReviewHandler(c *gin.Context) {
 		return
 	}
 
-	err = ctrl.Repo.Delete(ctrl.Pool, int(id))
+	err = ctrl.Repo.DeleteByID(ctrl.Pool, int(id))
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
