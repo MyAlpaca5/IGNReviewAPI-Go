@@ -46,12 +46,9 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	var tokenController = controllers.TokenController{Repo: repositories.Token{}, Pool: pool}
 
 	// --- Set Routes, Handlers, and per-request Middlewares ---
-	public := router.Group("api")
-	{
-		public.GET("/healthcheck", healthcheckController.HealthcheckHandler)
-		public.POST("/tokens/authentication", tokenController.CreateAuthenticationTokenHandler)
-		public.POST("/users", userController.CreateUserHandler)
-	}
+	router.GET("/healthcheck", healthcheckController.HealthcheckHandler)
+	router.POST("/api/tokens/authentication", tokenController.CreateAuthenticationTokenHandler)
+	router.POST("/api/users", userController.CreateUserHandler)
 
 	authorized := router.Group("api", middlewares.Authenticate(pool))
 	{
