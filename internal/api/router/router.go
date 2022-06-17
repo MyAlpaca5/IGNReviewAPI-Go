@@ -7,10 +7,12 @@ import (
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/controllers"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/middlewares"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/pasetotoken"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/spf13/viper"
 )
 
 func New(pool *pgxpool.Pool) *gin.Engine {
@@ -46,14 +48,18 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	var userRepo = repositories.NewUser(pool)
 	var userController = controllers.UserController{Repo: userRepo}
 	var tokenRepo = repositories.NewToken(pool)
-	var tokenController = controllers.TokenController{Repo: tokenRepo, UserRepo: userRepo}
+	tokenMaker, err := pasetotoken.NewPasetoMaker(viper.GetString("secret.symmetric_key"))
+	if err != nil {
+		panic(err.Error())
+	}
+	var tokenController = controllers.TokenController{Repo: tokenRepo, UserRepo: userRepo, TokenMaker: tokenMaker}
 
 	// --- Set Routes, Handlers, and per-request Middlewares ---
 	router.GET("/healthcheck", healthcheckController.HealthcheckHandler)
 	router.POST("/api/tokens/authentication", tokenController.CreateAuthenticationTokenHandler)
 	router.POST("/api/users", userController.CreateUserHandler)
 
-	authorized := router.Group("api", middlewares.Authenticate(tokenRepo))
+	authorized := router.Group("api", middlewares.Authenticate(tokenMaker))
 	{
 		authorized.GET("/reviews/:id", reviewController.ShowReviewHandler)
 		authorized.DELETE("/reviews/:id", reviewController.DeleteReviewHandler)

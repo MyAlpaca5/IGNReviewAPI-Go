@@ -5,3 +5,6 @@ port = 40001
 
 [general]
 version = "1.0.0"
+
+[secret]
+symmetric_key = "7dbbcee180ba4d456e4aa1cfbdad9c7b"

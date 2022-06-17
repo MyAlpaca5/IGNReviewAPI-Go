@@ -8,7 +8,7 @@ import (
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
-	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/pasetotoken"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,7 +29,7 @@ func TokenFromContext(c *gin.Context) *models.Token {
 	return token
 }
 
-func Authenticate(tokenRepo repositories.Token) gin.HandlerFunc {
+func Authenticate(tokenMaker pasetotoken.PasetoMaker) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Vary", "Authorization")
 
@@ -55,7 +55,7 @@ func Authenticate(tokenRepo repositories.Token) gin.HandlerFunc {
 		}
 
 		tokenStr := headerParts[1]
-		token, err := tokenRepo.ReadByToken(models.TokenStrToHash(tokenStr))
+		token, err := tokenMaker.VerifyToken(tokenStr)
 		if err != nil || token.Expiry.Before(time.Now().UTC()) {
 			response := r_errors.ResponseError{
 				StatusCode: http.StatusUnauthorized,

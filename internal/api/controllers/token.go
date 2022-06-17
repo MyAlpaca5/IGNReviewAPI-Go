@@ -1,19 +1,20 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/pasetotoken"
 	"github.com/gin-gonic/gin"
 )
 
 type TokenController struct {
-	UserRepo repositories.User
-	Repo     repositories.Token
+	UserRepo   repositories.User
+	Repo       repositories.Token
+	TokenMaker pasetotoken.PasetoMaker
 }
 
 // CreateUserHandler handles "POST /api/tokens/authentication" endpoint. It will insert a new authentication token entry to the database.
@@ -65,26 +66,26 @@ func (ctrl TokenController) CreateAuthenticationTokenHandler(c *gin.Context) {
 	}
 
 	// create a new token for user
-	token, err := models.NewToken(user.ID, time.Now().Add(24*time.Hour).UTC(), models.RoleSimple)
+	token, tokenStr, err := ctrl.TokenMaker.CreateToken(user.ID, time.Now().Add(24*time.Hour).UTC(), models.RoleSimple)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
-			Message:    "Request Error - cannot create authentication token, please try later",
+			Message:    "Request Error - cannot create access token, please try later",
 		}
 		c.JSON(response.StatusCode, response)
 		return
 	}
 
 	// insert new record into database
-	err = ctrl.Repo.Create(token)
+	ctrl.Repo.Create(token)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
-			Message:    "Request Error - cannot create authentication token, please try later",
+			Message:    "Request Error - cannot create access token, please try later",
 		}
 		c.JSON(response.StatusCode, response)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": fmt.Sprintf("authentication token: %s, expiry: %d-%02d-%02dT%02d:%02d:%02d", token.TokenString, token.Expiry.Year(), token.Expiry.Month(), token.Expiry.Day(), token.Expiry.Hour(), token.Expiry.Minute(), token.Expiry.Second())})
+	c.JSON(http.StatusCreated, gin.H{"access_token": tokenStr, "user_id": token.UserID, "expiry": token.Expiry, "role": token.Role})
 }
