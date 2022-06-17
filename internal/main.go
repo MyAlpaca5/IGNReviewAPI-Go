@@ -33,7 +33,7 @@ func Run() {
 	// --- gracefully shutdown ---
 	// https://github.com/gin-gonic/examples/blob/master/graceful-shutdown/graceful-shutdown/notify-with-context/server.go
 	srv := &http.Server{
-		Addr:    ":" + viper.GetString("port"),
+		Addr:    ":" + viper.GetString("database.port"),
 		Handler: router,
 	}
 

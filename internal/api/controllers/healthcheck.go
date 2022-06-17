@@ -16,7 +16,7 @@ func (controller HealthcheckController) HealthcheckHandler(c *gin.Context) {
 		Status: "available",
 		SystemInfo: models.SystemInfo{
 			Env:     viper.GetString("env"),
-			Version: viper.GetString("version"),
+			Version: viper.GetString("general.version"),
 		},
 	}
 	c.JSON(http.StatusOK, hc)

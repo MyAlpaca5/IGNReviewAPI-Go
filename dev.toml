@@ -1,0 +1,7 @@
+[database]
+url = "postgres://ign:test@localhost:5432/ign"
+url_nossl = "postgres://ign:test@localhost:5432/ign?sslmode=disable"
+port = 40001
+
+[general]
+version = "1.0.0"
