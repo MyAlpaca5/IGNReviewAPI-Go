@@ -10,7 +10,6 @@ import (
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type contextKey int
@@ -30,7 +29,7 @@ func TokenFromContext(c *gin.Context) *models.Token {
 	return token
 }
 
-func Authenticate(pool *pgxpool.Pool) gin.HandlerFunc {
+func Authenticate(tokenRepo repositories.Token) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Vary", "Authorization")
 
@@ -56,7 +55,7 @@ func Authenticate(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		tokenStr := headerParts[1]
-		token, err := repositories.Token{}.ReadByToken(pool, models.TokenStrToHash(tokenStr))
+		token, err := tokenRepo.ReadByToken(models.TokenStrToHash(tokenStr))
 		if err != nil || token.Expiry.Before(time.Now().UTC()) {
 			response := r_errors.ResponseError{
 				StatusCode: http.StatusUnauthorized,

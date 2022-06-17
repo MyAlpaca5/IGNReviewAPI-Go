@@ -9,13 +9,11 @@ import (
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type TokenController struct {
-	userRepo repositories.User
+	UserRepo repositories.User
 	Repo     repositories.Token
-	Pool     *pgxpool.Pool
 }
 
 // CreateUserHandler handles "POST /api/tokens/authentication" endpoint. It will insert a new authentication token entry to the database.
@@ -45,7 +43,7 @@ func (ctrl TokenController) CreateAuthenticationTokenHandler(c *gin.Context) {
 	}
 
 	// check if user exists
-	user, err := ctrl.userRepo.ReadByUsername(*credential.Username)
+	user, err := ctrl.UserRepo.ReadByUsername(*credential.Username)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -78,7 +76,7 @@ func (ctrl TokenController) CreateAuthenticationTokenHandler(c *gin.Context) {
 	}
 
 	// insert new record into database
-	err = ctrl.Repo.Create(ctrl.Pool, token)
+	err = ctrl.Repo.Create(token)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,

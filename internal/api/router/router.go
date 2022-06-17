@@ -41,16 +41,19 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 
 	// --- Create Controllers ---
 	var healthcheckController = controllers.HealthcheckController{}
-	var reviewController = controllers.ReviewController{Repo: repositories.NewReview(pool)}
-	var userController = controllers.UserController{Repo: repositories.NewUser(pool)}
-	var tokenController = controllers.TokenController{Repo: repositories.Token{}, Pool: pool}
+	var reviewRepo = repositories.NewReview(pool)
+	var reviewController = controllers.ReviewController{Repo: reviewRepo}
+	var userRepo = repositories.NewUser(pool)
+	var userController = controllers.UserController{Repo: userRepo}
+	var tokenRepo = repositories.NewToken(pool)
+	var tokenController = controllers.TokenController{Repo: tokenRepo, UserRepo: userRepo}
 
 	// --- Set Routes, Handlers, and per-request Middlewares ---
 	router.GET("/healthcheck", healthcheckController.HealthcheckHandler)
 	router.POST("/api/tokens/authentication", tokenController.CreateAuthenticationTokenHandler)
 	router.POST("/api/users", userController.CreateUserHandler)
 
-	authorized := router.Group("api", middlewares.Authenticate(pool))
+	authorized := router.Group("api", middlewares.Authenticate(tokenRepo))
 	{
 		authorized.GET("/reviews/:id", reviewController.ShowReviewHandler)
 		authorized.DELETE("/reviews/:id", reviewController.DeleteReviewHandler)

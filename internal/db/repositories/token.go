@@ -9,9 +9,17 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type Token struct{}
+type Token struct {
+	pool *pgxpool.Pool
+}
 
-func (t Token) Create(pool *pgxpool.Pool, m models.Token) error {
+func NewToken(pool *pgxpool.Pool) Token {
+	return Token{
+		pool: pool,
+	}
+}
+
+func (t Token) Create(m models.Token) error {
 	query := `
 	INSERT INTO tokens (token, userID, expiry, role)
 	VALUES ($1, $2, $3, $4)	
@@ -19,7 +27,7 @@ func (t Token) Create(pool *pgxpool.Pool, m models.Token) error {
 	args := []interface{}{m.TokenHash, m.UserID, m.Expiry, m.Role}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	commandTag, err := pool.Exec(ctx, query, args...)
+	commandTag, err := t.pool.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -31,7 +39,7 @@ func (t Token) Create(pool *pgxpool.Pool, m models.Token) error {
 	return nil
 }
 
-func (t Token) ReadByToken(pool *pgxpool.Pool, tokenHash []byte) (models.Token, error) {
+func (t Token) ReadByToken(tokenHash []byte) (models.Token, error) {
 	query := `
 	SELECT userid, expiry, role
 	FROM tokens
@@ -40,7 +48,7 @@ func (t Token) ReadByToken(pool *pgxpool.Pool, tokenHash []byte) (models.Token, 
 	var token = models.Token{TokenHash: tokenHash}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	err := pool.QueryRow(ctx, query, tokenHash).Scan(&token.UserID, &token.Expiry, &token.Role)
+	err := t.pool.QueryRow(ctx, query, tokenHash).Scan(&token.UserID, &token.Expiry, &token.Role)
 	if err != nil {
 		return models.Token{}, err
 	}
