@@ -173,7 +173,8 @@ func (ctrl ReviewController) DeleteReviewHandler(c *gin.Context) {
 
 // ListReviewsHandler handles "GET /api/reviews" endpoint.
 func (ctrl ReviewController) ListReviewsHandler(c *gin.Context) {
-	reviews, err := ctrl.Repo.ReadAll(c.Request.URL.Query())
+	queryParam := models.NewReviewQueryParam(c.Request.URL.Query())
+	reviews, err := ctrl.Repo.ReadAll(queryParam)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,

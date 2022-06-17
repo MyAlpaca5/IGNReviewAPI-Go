@@ -57,23 +57,23 @@ func (r Review) ReadByID(id int) (models.Review, error) {
 	return review, nil
 }
 
-func (r Review) ReadAll(queryParamaters map[string][]string) ([]models.Review, error) {
-	whereClause, err := generateWhereClause(queryParamaters)
+func (r Review) ReadAll(queryParam models.ReviewQueryParam) ([]models.Review, error) {
+	whereClause, err := generateWhereClause(queryParam)
 	if err != nil {
 		return nil, err
 	}
 
-	orderByClause, err := generateOrderByClause(queryParamaters)
+	orderByClause, err := generateOrderByClause(queryParam)
 	if err != nil {
 		return nil, err
 	}
 
-	limitClause, err := generateLimitClause(queryParamaters)
+	limitClause, err := generateLimitClause(queryParam)
 	if err != nil {
 		return nil, err
 	}
 
-	offsetClause, err := generateOffsetClause(queryParamaters)
+	offsetClause, err := generateOffsetClause(queryParam)
 	if err != nil {
 		return nil, err
 	}
@@ -154,26 +154,26 @@ func (r Review) DeleteByID(id int) error {
 }
 
 // generateWhereClause generate a where clause based on the query parameters
-func generateWhereClause(queryParamaters map[string][]string) (string, error) {
+func generateWhereClause(queryParam models.ReviewQueryParam) (string, error) {
 	var whereClause = make([]string, 0, 3)
 
-	if name, found := queryParamaters["name"]; found {
+	if queryParam.Name != nil {
 		// using PostgreSQL build-in full text search
-		whereClause = append(whereClause, fmt.Sprintf("(to_tsvector('simple', name) @@ plainto_tsquery('simple', '%s'))", name[0]))
+		whereClause = append(whereClause, fmt.Sprintf("(to_tsvector('simple', name) @@ plainto_tsquery('simple', '%s'))", *queryParam.Name))
 	}
 
-	if score, found := queryParamaters["scoreMin"]; found {
-		val, err := strconv.ParseFloat(score[0], 32)
+	if queryParam.ScoreMin != nil {
+		val, err := strconv.ParseFloat(*queryParam.ScoreMin, 32)
 		if err != nil {
 			return "", errors.New("query parameter 'scoreMin' must be float type and 0 <= scoreMin <= 10")
 		} else if val < 0.0 || val > 10.0 {
 			return "", errors.New("query parameter 'scoreMin' must be 0 <= scoreMin <= 10")
 		}
-		whereClause = append(whereClause, fmt.Sprintf("review_score >= %s", score[0]))
+		whereClause = append(whereClause, fmt.Sprintf("review_score >= %s", *queryParam.ScoreMin))
 	}
 
-	if genres, found := queryParamaters["genres"]; found {
-		whereClause = append(whereClause, fmt.Sprintf("genre_list @> '{%s}'", strings.Join(genres, ",")))
+	if queryParam.Genres != nil {
+		whereClause = append(whereClause, fmt.Sprintf("genre_list @> '{%s}'", strings.Join(queryParam.Genres, ",")))
 	}
 
 	if len(whereClause) != 0 {
@@ -186,15 +186,15 @@ func generateWhereClause(queryParamaters map[string][]string) (string, error) {
 var orderOptions = [...]string{"id", "-id", "name", "-name", "review_score", "-review_score"}
 
 // generateOrderByClause generate a order by clause based on the query parameters
-func generateOrderByClause(queryParamaters map[string][]string) (string, error) {
-	order, found := queryParamaters["order"]
-	if !found {
+func generateOrderByClause(queryParam models.ReviewQueryParam) (string, error) {
+	if queryParam.Order == nil {
 		return "ORDER BY id", nil
 	}
 
 	valid := false
+	order := *queryParam.Order
 	for _, o := range orderOptions {
-		if order[0] == o {
+		if order == o {
 			valid = true
 			break
 		}
@@ -204,38 +204,38 @@ func generateOrderByClause(queryParamaters map[string][]string) (string, error) 
 		return "", errors.New(fmt.Sprintf("query parameter 'order' must be one of followings: %v", orderOptions))
 	}
 
-	if order[0][0] == '-' {
-		return "ORDER BY " + order[0][1:] + " DESC", nil
+	if order[0] == '-' {
+		return "ORDER BY " + order[1:] + " DESC", nil
 	}
-	return "ORDER BY " + order[0], nil
+	return "ORDER BY " + order, nil
 }
 
 // generateLimitClause generate a limit clause based on the query parameters
-func generateLimitClause(queryParamaters map[string][]string) (string, error) {
-	if limit, found := queryParamaters["page_size"]; found {
-		_, err := strconv.Atoi(limit[0])
+func generateLimitClause(queryParam models.ReviewQueryParam) (string, error) {
+	if queryParam.PageSize != nil {
+		_, err := strconv.Atoi(*queryParam.PageSize)
 		if err != nil {
 			return "", errors.New("query parameter 'page_size' must be positive integer type")
 		}
-		return "LIMIT " + limit[0], nil
+		return "LIMIT " + *queryParam.PageSize, nil
 	}
 
 	return "LIMIT 10", nil
 }
 
 // generateOffsetClause generate a limit clause based on the query parameters
-func generateOffsetClause(queryParamaters map[string][]string) (string, error) {
+func generateOffsetClause(queryParam models.ReviewQueryParam) (string, error) {
 	page_size := 10
-	if limit, found := queryParamaters["page_size"]; found {
-		p, err := strconv.Atoi(limit[0])
+	if queryParam.PageSize != nil {
+		p, err := strconv.Atoi(*queryParam.PageSize)
 		if err != nil {
 			return "", errors.New("query parameter 'page_size' must be positive integer type")
 		}
 		page_size = p
 	}
 
-	if offset, found := queryParamaters["page"]; found {
-		page, err := strconv.Atoi(offset[0])
+	if queryParam.Page != nil {
+		page, err := strconv.Atoi(*queryParam.Page)
 		if err != nil {
 			return "", errors.New("query parameter 'page' must be positive integer type")
 		}
