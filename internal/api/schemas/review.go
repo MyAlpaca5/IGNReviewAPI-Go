@@ -19,7 +19,7 @@ type ReviewIn struct {
 	CreatorList []string `json:"creator_list,omitempty"`
 }
 
-// FillReview accepts a Reviwe model and update it with data in a ReviewIn schema
+// UpdateReview accepts a Reviwe model and update it with data in a ReviewIn schema
 func (r ReviewIn) UpdateReview(original models.Review) models.Review {
 	var updated = original
 
