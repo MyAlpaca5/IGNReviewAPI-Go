@@ -22,5 +22,4 @@
 | POST   | `/api/users`                 | Create a new user entry
 | PUT    | `/api/users/password`        | Update the password of a specific user
 | POST   | `/api/tokens/authentication` | Generate a new authentication token
-| POST   | `/api/tokens/password-reset` | Generate a new password-reset token
 
