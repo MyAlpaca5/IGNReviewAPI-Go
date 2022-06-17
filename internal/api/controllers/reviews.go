@@ -1,32 +1,28 @@
 package controllers
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/schemas"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type ReviewController struct {
 	Repo repositories.Review
-	Pool *pgxpool.Pool
 }
 
 // CreateReviewHandler handles "POST /api/reviews" endpoint. It will insert a new review entry to the database.
 func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
-	var reviewIn models.ReviewIn
+	var reviewIn schemas.ReviewIn
 	if err := c.ShouldBindJSON(&reviewIn); err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
-			Message:    RequestErr(err),
+			Message:    r_errors.GetRequestErrStr(err),
 		}
 		c.JSON(response.StatusCode, response)
 		return
@@ -52,7 +48,7 @@ func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 		return
 	}
 
-	id, err := ctrl.Repo.Create(ctrl.Pool, reviewIn.ToReview())
+	id, err := ctrl.Repo.Create(reviewIn.UpdateReview(models.Review{}))
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -78,7 +74,7 @@ func (ctrl ReviewController) ShowReviewHandler(c *gin.Context) {
 		return
 	}
 
-	review, err := ctrl.Repo.ReadByID(ctrl.Pool, int(id))
+	review, err := ctrl.Repo.ReadByID(int(id))
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -88,16 +84,16 @@ func (ctrl ReviewController) ShowReviewHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, review.ToReviewOut())
+	c.JSON(http.StatusOK, gin.H{"review": schemas.ToReviewOut(review)})
 }
 
 // UpdateReviewHandler handles "PATCH /api/reviews/:id" endpoint. It will update the review entry in the database based on the user input.
 func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
-	var reviewIn models.ReviewIn
+	var reviewIn schemas.ReviewIn
 	if err := c.ShouldBindJSON(&reviewIn); err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
-			Message:    RequestErr(err),
+			Message:    r_errors.GetRequestErrStr(err),
 		}
 		c.JSON(response.StatusCode, response)
 		return
@@ -125,7 +121,7 @@ func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
 	}
 
 	// read original values
-	original, err := ctrl.Repo.ReadByID(ctrl.Pool, int(id))
+	original, err := ctrl.Repo.ReadByID(int(id))
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -135,31 +131,8 @@ func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
 		return
 	}
 
-	// create updated record
-	var updated = original
-	if reviewIn.Name != nil {
-		updated.Name = *reviewIn.Name
-	}
-	if reviewIn.Description != nil {
-		updated.Description = *reviewIn.Description
-	}
-	if reviewIn.ReviewScore != nil {
-		updated.ReviewScore = *reviewIn.ReviewScore
-	}
-	if reviewIn.ReviewURL != nil {
-		updated.ReviewURL = *reviewIn.ReviewURL
-	}
-	if reviewIn.MediaType != nil {
-		updated.MediaType = *reviewIn.MediaType
-	}
-	if reviewIn.GenreList != nil {
-		updated.GenreList = reviewIn.GenreList
-	}
-	if reviewIn.CreatorList != nil {
-		updated.CreatorList = reviewIn.CreatorList
-	}
-
-	err = ctrl.Repo.UpdateByID(ctrl.Pool, int(id), updated)
+	var updated = reviewIn.UpdateReview(original)
+	err = ctrl.Repo.UpdateByID(int(id), updated)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusConflict,
@@ -185,7 +158,7 @@ func (ctrl ReviewController) DeleteReviewHandler(c *gin.Context) {
 		return
 	}
 
-	err = ctrl.Repo.DeleteByID(ctrl.Pool, int(id))
+	err = ctrl.Repo.DeleteByID(int(id))
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -200,7 +173,7 @@ func (ctrl ReviewController) DeleteReviewHandler(c *gin.Context) {
 
 // ListReviewsHandler handles "GET /api/reviews" endpoint.
 func (ctrl ReviewController) ListReviewsHandler(c *gin.Context) {
-	reviews, err := ctrl.Repo.ReadAll(ctrl.Pool, c.Request.URL.Query())
+	reviews, err := ctrl.Repo.ReadAll(c.Request.URL.Query())
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
@@ -210,30 +183,10 @@ func (ctrl ReviewController) ListReviewsHandler(c *gin.Context) {
 		return
 	}
 
-	reviewOuts := make([]models.ReviewOut, 0, len(reviews))
-	for _, v := range reviews {
-		reviewOuts = append(reviewOuts, v.ToReviewOut())
+	reviewOuts := make([]schemas.ReviewOut, 0, len(reviews))
+	for _, val := range reviews {
+		reviewOuts = append(reviewOuts, schemas.ToReviewOut(val))
 	}
 
 	c.JSON(http.StatusOK, gin.H{"reviews": reviewOuts})
-}
-
-func RequestErr(err error) string {
-	var ginErr gin.Error
-	var validationErr validator.ValidationErrors
-	var syntaxError *json.SyntaxError
-	var unmarshalTypeError *json.UnmarshalTypeError
-
-	switch {
-	case errors.As(err, &syntaxError):
-		return r_errors.JSONSyntaxError(syntaxError)
-	case errors.As(err, &unmarshalTypeError):
-		return r_errors.JSONUnmarshalTypeError(unmarshalTypeError)
-	case errors.As(err, &ginErr):
-		return r_errors.GINError(ginErr)
-	case errors.As(err, &validationErr):
-		return r_errors.ValidationError(validationErr)
-	default:
-		return "Unknown Error - " + err.Error()
-	}
 }

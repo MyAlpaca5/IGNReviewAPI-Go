@@ -12,9 +12,17 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type Review struct{}
+type Review struct {
+	pool *pgxpool.Pool
+}
 
-func (r Review) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
+func NewReview(pool *pgxpool.Pool) Review {
+	return Review{
+		pool: pool,
+	}
+}
+
+func (r Review) Create(m models.Review) (int, error) {
 	query := `
 	INSERT INTO reviews (name, description, review_url, review_score, media_type, genre_list, creator_list)
 	VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -24,7 +32,7 @@ func (r Review) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 	args := []interface{}{m.Name, m.Description, m.ReviewURL, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	err := pool.QueryRow(ctx, query, args...).Scan(&id)
+	err := r.pool.QueryRow(ctx, query, args...).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -32,7 +40,7 @@ func (r Review) Create(pool *pgxpool.Pool, m models.Review) (int, error) {
 	return id, nil
 }
 
-func (r Review) ReadByID(pool *pgxpool.Pool, id int) (models.Review, error) {
+func (r Review) ReadByID(id int) (models.Review, error) {
 	query := `
 	SELECT name, description, created_at, updated_at, review_url, review_score, media_type, genre_list, creator_list
 	FROM reviews
@@ -41,7 +49,7 @@ func (r Review) ReadByID(pool *pgxpool.Pool, id int) (models.Review, error) {
 	var review models.Review
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	err := pool.QueryRow(ctx, query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList)
+	err := r.pool.QueryRow(ctx, query, id).Scan(&review.Name, &review.Description, &review.CreatedAt, &review.UpdatedAt, &review.ReviewURL, &review.ReviewScore, &review.MediaType, &review.GenreList, &review.CreatorList)
 	if err != nil {
 		return models.Review{}, err
 	}
@@ -49,7 +57,7 @@ func (r Review) ReadByID(pool *pgxpool.Pool, id int) (models.Review, error) {
 	return review, nil
 }
 
-func (r Review) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string) ([]models.Review, error) {
+func (r Review) ReadAll(queryParamaters map[string][]string) ([]models.Review, error) {
 	whereClause, err := generateWhereClause(queryParamaters)
 	if err != nil {
 		return nil, err
@@ -80,7 +88,7 @@ func (r Review) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string)
 	defer cancel()
 
 	// https://pkg.go.dev/github.com/jackc/pgx#hdr-Query_Interface
-	rows, err := pool.Query(ctx, query)
+	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +112,7 @@ func (r Review) ReadAll(pool *pgxpool.Pool, queryParamaters map[string][]string)
 	return reviews, nil
 }
 
-func (r Review) UpdateByID(pool *pgxpool.Pool, id int, m models.Review) error {
+func (r Review) UpdateByID(id int, m models.Review) error {
 	// updated_at here is used as a simple locking mechanism to prevent data race
 	query := `
 	UPDATE reviews 
@@ -114,7 +122,7 @@ func (r Review) UpdateByID(pool *pgxpool.Pool, id int, m models.Review) error {
 	args := []interface{}{m.Name, m.Description, m.ReviewURL, m.ReviewScore, m.MediaType, m.GenreList, m.CreatorList, id, m.UpdatedAt}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	commandTag, err := pool.Exec(ctx, query, args...)
+	commandTag, err := r.pool.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -126,14 +134,14 @@ func (r Review) UpdateByID(pool *pgxpool.Pool, id int, m models.Review) error {
 	return nil
 }
 
-func (r Review) DeleteByID(pool *pgxpool.Pool, id int) error {
+func (r Review) DeleteByID(id int) error {
 	query := `
 	DELETE FROM reviews
 	WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	commandTag, err := pool.Exec(ctx, query, id)
+	commandTag, err := r.pool.Exec(ctx, query, id)
 	if err != nil {
 		return err
 	}
