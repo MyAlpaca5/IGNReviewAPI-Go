@@ -5,7 +5,6 @@ import (
 	"time"
 
 	r_errors "github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/errors"
-	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/pasetotoken"
 	"github.com/gin-gonic/gin"
@@ -66,7 +65,7 @@ func (ctrl TokenController) CreateAuthenticationTokenHandler(c *gin.Context) {
 	}
 
 	// create a new token for user
-	token, tokenStr, err := ctrl.TokenMaker.CreateToken(user.ID, time.Now().Add(24*time.Hour).UTC(), models.RoleSimple)
+	token, tokenStr, err := ctrl.TokenMaker.CreateToken(user.ID, time.Now().Add(24*time.Hour).UTC(), user.Role)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,

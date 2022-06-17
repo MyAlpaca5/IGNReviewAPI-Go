@@ -1,11 +1,13 @@
 package router
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/controllers"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/api/middlewares"
+	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/models"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/db/repositories"
 	"github.com/MyAlpaca5/IGNReviewAPI-Go/internal/pasetotoken"
 	"github.com/gin-gonic/gin"
@@ -61,14 +63,19 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 
 	authorized := router.Group("api", middlewares.Authenticate(tokenMaker))
 	{
-		authorized.GET("/reviews/:id", reviewController.ShowReviewHandler)
-		authorized.DELETE("/reviews/:id", reviewController.DeleteReviewHandler)
-		authorized.PATCH("/reviews/:id", reviewController.UpdateReviewHandler)
-		authorized.GET("/reviews", reviewController.ListReviewsHandler)
-		authorized.POST("/reviews", reviewController.CreateReviewHandler)
+		simpleRole := authorized.Group("", middlewares.Authorize(models.RoleSimple))
+		{
+			simpleRole.GET("/reviews/:id", reviewController.ShowReviewHandler)
+			simpleRole.DELETE("/reviews/:id", reviewController.DeleteReviewHandler)
+			simpleRole.PATCH("/reviews/:id", reviewController.UpdateReviewHandler)
+			simpleRole.GET("/reviews", reviewController.ListReviewsHandler)
+			simpleRole.POST("/reviews", reviewController.CreateReviewHandler)
+		}
 
-		// admin := authorized.Group("admin", adminprivilege)
-		// admin.GET("/metrics", getmetrics)
+		adminRole := authorized.Group("admin", middlewares.Authorize(models.RoleAdmin))
+		{
+			adminRole.GET("/metrics", func(ctx *gin.Context) { fmt.Println("I have admin role") })
+		}
 	}
 
 	return router

@@ -22,12 +22,12 @@ func NewUser(pool *pgxpool.Pool) User {
 
 func (u User) Create(m models.User) (int, error) {
 	query := `
-	INSERT INTO users (username, password, email)
-	VALUES ($1, $2, $3)
+	INSERT INTO users (username, password, email, role)
+	VALUES ($1, $2, $3, $4)
 	RETURNING id`
 
 	var id int
-	args := []interface{}{m.Username, m.Password, m.Email}
+	args := []interface{}{m.Username, m.Password, m.Email, m.Role}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	err := u.pool.QueryRow(ctx, query, args...).Scan(&id)
@@ -43,14 +43,14 @@ func (u User) Create(m models.User) (int, error) {
 
 func (u User) ReadByUsername(username string) (models.User, error) {
 	query := `
-	SELECT id, created_at, updated_at, username, password, email
+	SELECT id, created_at, updated_at, username, password, email, role
 	FROM users
 	WHERE username = $1`
 
 	var user models.User
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	err := u.pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Username, &user.Password, &user.Email)
+	err := u.pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Username, &user.Password, &user.Email, &user.Role)
 	if err != nil {
 		return models.User{}, err
 	}

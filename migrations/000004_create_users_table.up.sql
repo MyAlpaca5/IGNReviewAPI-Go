@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at timestamp NOT NULL DEFAULT NOW(),
     username text UNIQUE NOT NULL,
     password bytea NOT NULL,
-    email citext
+    email citext,
+    role int NOT NULL
 );

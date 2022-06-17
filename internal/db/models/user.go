@@ -12,6 +12,7 @@ type User struct {
 	Username string
 	Password []byte
 	Email    string
+	Role     int
 }
 
 func (u User) ComparePassword(password string) (bool, error) {

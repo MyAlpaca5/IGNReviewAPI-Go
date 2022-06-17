@@ -58,7 +58,9 @@ func (u *UserIn) Validate() error {
 
 // ToUser creates a User model based on the data in a UserIn schema
 func (u UserIn) ToUser() (models.User, error) {
-	var user models.User
+	var user = models.User{
+		Role: models.RoleSimple,
+	}
 
 	if u.Username != nil {
 		user.Username = *u.Username
