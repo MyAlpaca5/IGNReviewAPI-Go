@@ -28,7 +28,7 @@ func (ctrl TokenController) CreateAuthenticationTokenHandler(c *gin.Context) {
 	if err := c.ShouldBindJSON(&credential); err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
-			Message:    RequestErr(err),
+			Message:    r_errors.GetBindingErrorStr(err),
 		}
 		c.JSON(response.StatusCode, response)
 		return
@@ -45,7 +45,7 @@ func (ctrl TokenController) CreateAuthenticationTokenHandler(c *gin.Context) {
 	}
 
 	// check if user exists
-	user, err := ctrl.userRepo.ReadByUsername(ctrl.Pool, *credential.Username)
+	user, err := ctrl.userRepo.ReadByUsername(*credential.Username)
 	if err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,

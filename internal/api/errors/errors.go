@@ -24,7 +24,7 @@ func (re ResponseError) Unwarp() error {
 	return re.Err
 }
 
-func GetRequestErrStr(err error) string {
+func GetBindingErrorStr(err error) string {
 	var ginErr gin.Error
 	var validationErr validator.ValidationErrors
 	var syntaxError *json.SyntaxError

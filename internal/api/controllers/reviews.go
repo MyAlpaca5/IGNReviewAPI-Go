@@ -22,7 +22,7 @@ func (ctrl ReviewController) CreateReviewHandler(c *gin.Context) {
 	if err := c.ShouldBindJSON(&reviewIn); err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
-			Message:    r_errors.GetRequestErrStr(err),
+			Message:    r_errors.GetBindingErrorStr(err),
 		}
 		c.JSON(response.StatusCode, response)
 		return
@@ -93,7 +93,7 @@ func (ctrl ReviewController) UpdateReviewHandler(c *gin.Context) {
 	if err := c.ShouldBindJSON(&reviewIn); err != nil {
 		response := r_errors.ResponseError{
 			StatusCode: http.StatusInternalServerError,
-			Message:    r_errors.GetRequestErrStr(err),
+			Message:    r_errors.GetBindingErrorStr(err),
 		}
 		c.JSON(response.StatusCode, response)
 		return
