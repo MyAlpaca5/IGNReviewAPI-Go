@@ -10,19 +10,27 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type User struct{}
+type User struct {
+	pool *pgxpool.Pool
+}
 
-func (u User) Create(pool *pgxpool.Pool, m models.User) (int, error) {
+func NewUser(pool *pgxpool.Pool) User {
+	return User{
+		pool: pool,
+	}
+}
+
+func (u User) Create(m models.User) (int, error) {
 	query := `
 	INSERT INTO users (username, password, email)
 	VALUES ($1, $2, $3)
 	RETURNING id`
 
 	var id int
-	args := []interface{}{m.Username, m.PasswordHash, m.Email}
+	args := []interface{}{m.Username, m.Password, m.Email}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	err := pool.QueryRow(ctx, query, args...).Scan(&id)
+	err := u.pool.QueryRow(ctx, query, args...).Scan(&id)
 	if err != nil {
 		if e, ok := err.(*pgconn.PgError); ok && e.Code == "23505" {
 			return 0, errors.New("unique constraint violation, possibly duplicate 'username'")
@@ -33,7 +41,7 @@ func (u User) Create(pool *pgxpool.Pool, m models.User) (int, error) {
 	return id, nil
 }
 
-func (u User) ReadByUsername(pool *pgxpool.Pool, username string) (models.User, error) {
+func (u User) ReadByUsername(username string) (models.User, error) {
 	query := `
 	SELECT id, created_at, updated_at, username, password, email
 	FROM users
@@ -42,7 +50,7 @@ func (u User) ReadByUsername(pool *pgxpool.Pool, username string) (models.User, 
 	var user models.User
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	err := pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Username, &user.PasswordHash, &user.Email)
+	err := u.pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Username, &user.Password, &user.Email)
 	if err != nil {
 		return models.User{}, err
 	}

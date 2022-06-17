@@ -42,7 +42,7 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	// --- Create Controllers ---
 	var healthcheckController = controllers.HealthcheckController{}
 	var reviewController = controllers.ReviewController{Repo: repositories.NewReview(pool)}
-	var userController = controllers.UserController{Repo: repositories.User{}, Pool: pool}
+	var userController = controllers.UserController{Repo: repositories.NewUser(pool)}
 	var tokenController = controllers.TokenController{Repo: repositories.Token{}, Pool: pool}
 
 	// --- Set Routes, Handlers, and per-request Middlewares ---
