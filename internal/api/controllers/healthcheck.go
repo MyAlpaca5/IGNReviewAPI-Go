@@ -9,21 +9,21 @@ import (
 
 type HealthcheckController struct{}
 
-type SystemInfo struct {
+type systemInfo struct {
 	Env     string `json:"env"`
 	Version string `json:"version"`
 }
 
-type Healthcheck struct {
+type healthcheck struct {
 	Status     string     `json:"status"`
-	SystemInfo SystemInfo `json:"system_info"`
+	SystemInfo systemInfo `json:"system_info"`
 }
 
-// HealthcheckHandler handles "GET /api/healthcheck" endpoint.
+// HealthcheckHandler handles "GET /healthcheck" endpoint.
 func (ctrl HealthcheckController) HealthcheckHandler(c *gin.Context) {
-	hc := Healthcheck{
+	hc := healthcheck{
 		Status: "available",
-		SystemInfo: SystemInfo{
+		SystemInfo: systemInfo{
 			Env:     viper.GetString("env"),
 			Version: viper.GetString("general.version"),
 		},
