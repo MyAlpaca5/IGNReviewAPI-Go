@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -14,6 +13,8 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 )
 
@@ -37,6 +38,8 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	// --- Set Global Middlewares ---
 	router.Use(middlewares.RequestRateLimiter(2, 4))
 	router.Use(middlewares.BodySizeLimiter(65_536))
+	registry := prometheus.NewRegistry()
+	router.Use(middlewares.MonitorMetrics(registry))
 
 	// --- Set Error Handlers ---
 	// router.NoRoute(notFoundErrorHandler)
@@ -74,7 +77,9 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 
 		adminRole := authorized.Group("admin", middlewares.Authorize(models.RoleAdmin))
 		{
-			adminRole.GET("/metrics", func(ctx *gin.Context) { fmt.Println("I have admin role") })
+			adminRole.GET("/metrics", func(c *gin.Context) {
+				promhttp.HandlerFor(registry, promhttp.HandlerOpts{}).ServeHTTP(c.Writer, c.Request)
+			})
 		}
 	}
 
