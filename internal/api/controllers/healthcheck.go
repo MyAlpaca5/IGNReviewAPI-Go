@@ -25,7 +25,7 @@ func (ctrl HealthcheckController) HealthcheckHandler(c *gin.Context) {
 		Status: "available",
 		SystemInfo: systemInfo{
 			Env:     viper.GetString("env"),
-			Version: viper.GetString("general.version"),
+			Version: viper.GetString("APP_VERSION"),
 		},
 	}
 	c.JSON(http.StatusOK, hc)

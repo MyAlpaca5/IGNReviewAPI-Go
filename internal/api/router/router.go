@@ -53,7 +53,7 @@ func New(pool *pgxpool.Pool) *gin.Engine {
 	var userRepo = repositories.NewUser(pool)
 	var userController = controllers.UserController{Repo: userRepo}
 	var tokenRepo = repositories.NewToken(pool)
-	tokenMaker, err := pasetotoken.NewPasetoMaker(viper.GetString("secret.symmetric_key"))
+	tokenMaker, err := pasetotoken.NewPasetoMaker(viper.GetString("SECRET_KEY"))
 	if err != nil {
 		panic(err.Error())
 	}

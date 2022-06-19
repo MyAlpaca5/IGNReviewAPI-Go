@@ -22,7 +22,7 @@ func InitConfig() {
 }
 
 func loadDevConfig() {
-	viper.SetConfigFile("dev.toml")
+	viper.SetConfigFile(".env")
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Sprintf("couldn't load config: %s", err))
 	}
