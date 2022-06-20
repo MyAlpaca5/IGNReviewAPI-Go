@@ -16,4 +16,4 @@ migration_down:
 	@migrate -path ./migrations -database "$DATABASE_URL_NOSSL" down
 
 populate_fake_data:
-    @echo psql -U "$DATABASE_USER" -d "$DATABASE_NAME" -f ./resources/fakedata.sql
+    @psql -U "$DATABASE_USER" -d "$DATABASE_NAME" -f ./resources/fakedata.sql
