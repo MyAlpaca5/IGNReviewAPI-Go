@@ -13,10 +13,11 @@ An application to simulate a simple REST API service using Gin Framework and Pos
 ## Quick Start
 1. Set up PostgreSQL and create an empty database. Then update the environment variables in the `.env` file to reflect your setup
     - info on [Installation and Create Database](https://www.postgresql.org/docs/current/tutorial-start.html) and info on [Connection String](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING)
-2. Create tables, run `just migration_up`
+2. Download go dependencies, run `go mod download`
+3. Create tables, run `just migration_up`
     - you can remove all tables by running `just migration_down`
     - you can also populate the tables with some fake data by running `just populate_fake_data`, it will create 300+ review records and two users (["username":"admin", "password":"pa55w0rd", "role":"admin"], ["username":"simple", "password":"simplepwd", "role":"simple"])
-3. Start the service, run `just run_dev`
+4. Start the service, run `just run_dev`
     - the application is meant to run in developing environment, for production, need to implement a better way for handling configuration files
  
 ## API Endpoints
