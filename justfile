@@ -3,6 +3,9 @@ set dotenv-load
 default:
     @just --list
 
+run:
+    @go run . --dev=prod
+
 run_dev:
     @go run .
 
