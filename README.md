@@ -7,7 +7,7 @@
 
 [golang-migrate v4](https://github.com/golang-migrate/migrate)
 
-[make](https://www.gnu.org/software/make/) or [just](https://github.com/casey/just)
+[just](https://github.com/casey/just)
  
 ## API Endpoints
 | Method | URL Pattern                  | Action                 
