@@ -48,5 +48,5 @@ An application to simulate a simple REST API service using Gin Framework and Pos
 | GET    | `/api/admin/metrics`         | `None`                               | `None`
 
 ## Comments
-1. solution for error `pq: SSL is not enabled on the server` -> set `sslmode=disable`, should only be used only for development!!
-2. token-based authentication using [PASETO](https://github.com/o1egl/paseto)
+1. Solution for error `pq: SSL is not enabled on the server` is to set `sslmode=disable`, should only be used only for dev environment!
+2. Authentication is done using token-based authentication, [PASETO](https://github.com/o1egl/paseto)
